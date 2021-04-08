@@ -1,16 +1,25 @@
 # Databricks notebook source
 # MAGIC %md
+# MAGIC 
+# MAGIC # Introduction
+# MAGIC 
+# MAGIC This is a demo of data engineering pipelines involving streaming gzipped data on the Databricks platform. This notebook demonstrates Spark DataFrames based unzipping of gzip files as well as RDD based methods. Data is then ingested into Delta Lake where it is further downstream processed via filters for different schemas. This demonstration of bifurcating streams shows how a single ingestion stream can be written to multiple tables.
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC 
+# MAGIC ## Architecture
+# MAGIC <img src='https://raw.githubusercontent.com/brickmeister/demo_bifurcating_streams/main/img/Bifurcating%20Streams.png' /img>
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC # Generate Gzipped CSV files in DBFS
 
 # COMMAND ----------
 
 # MAGIC %fs ls /databricks-datasets/structured-streaming/events
-
-# COMMAND ----------
-
-# MAGIC %sh
-# MAGIC 
-# MAGIC cat /dbfs/databricks-datasets/structured-streaming/events/file-0.json
 
 # COMMAND ----------
 
@@ -356,9 +365,3 @@
 # MAGIC   
 # MAGIC for a in _paths:
 # MAGIC     dbutils.fs.rm(a, recurse = True)
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC 
-# MAGIC DROP TABLE dbfs:/tmp/demo_streamin_data_1
