@@ -313,7 +313,7 @@
 # MAGIC %scala
 # MAGIC 
 # MAGIC /*
-# MAGIC   Decode data for dataframe with schema type 1
+# MAGIC   Decode data for dataframe with schema type 3
 # MAGIC */
 # MAGIC 
 # MAGIC import org.apache.spark.sql.functions.from_json;
