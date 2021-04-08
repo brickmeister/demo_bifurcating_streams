@@ -71,6 +71,7 @@
 # MAGIC   Write out files to gzipped format
 # MAGIC */
 # MAGIC 
+# MAGIC // Write out the table to a gzipped csv format for later ingestion
 # MAGIC df_clickstream.write
 # MAGIC               .format("csv")
 # MAGIC               .option("compression", "gzip")
@@ -116,10 +117,12 @@
 # MAGIC   Read in gzipped files
 # MAGIC */
 # MAGIC 
+# MAGIC // Set the file schema for the gzipped files
 # MAGIC val file_schema = StructType(
 # MAGIC                     List(StructField("json", StringType),
 # MAGIC                          StructField("schema_type", IntegerType))); 
 # MAGIC 
+# MAGIC // Read in the gzipped files using Spark's native CSV GZIP decompressor
 # MAGIC val df : DataFrame = spark.readStream
 # MAGIC                           .format("csv")
 # MAGIC                           .option("header", true)
@@ -137,6 +140,7 @@
 # MAGIC   Write streaming data into delta lake
 # MAGIC */
 # MAGIC 
+# MAGIC // Write the Spark DataFrame yielded from native CSV GZIP decompression to Delta Lake
 # MAGIC df.writeStream
 # MAGIC   .format("delta")
 # MAGIC   .trigger(Trigger.Once)
@@ -169,7 +173,8 @@
 # MAGIC # Get a list of all files to unzip
 # MAGIC gzipped_files : List[str] = [a.replace("/dbfs/", "dbfs:/")\
 # MAGIC                                for a in glob("/dbfs/tmp/gzipped_clickstream/*.gz")]
-# MAGIC   
+# MAGIC 
+# MAGIC # Specify the file schema
 # MAGIC file_schema : StructType = StructType(
 # MAGIC                               [StructField("json", StringType()),
 # MAGIC                                StructField("schema_type", IntegerType())]) 
@@ -201,6 +206,7 @@
 # MAGIC   Write dataframe to delta lake
 # MAGIC """
 # MAGIC 
+# MAGIC # Write the rdd -> dataframe results to delta lake
 # MAGIC df.write\
 # MAGIC   .format("delta")\
 # MAGIC   .mode("overwrite")\
@@ -216,14 +222,17 @@
 
 # MAGIC %scala
 # MAGIC 
+# MAGIC import org.apache.spark.sql.DataFrame;
+# MAGIC 
 # MAGIC /*
 # MAGIC   Read from delta
 # MAGIC */
 # MAGIC 
-# MAGIC val delta_stream = spark.readStream
-# MAGIC                         .format("delta")
-# MAGIC                         .option("startingVerson", "latest")
-# MAGIC                         .load("dbfs:/tmp/demo_streaming_data")
+# MAGIC // Primary read stream from Delta Lake
+# MAGIC val delta_stream : DataFrame = spark.readStream
+# MAGIC                                     .format("delta")
+# MAGIC                                     .option("startingVerson", "latest")
+# MAGIC                                     .load("dbfs:/tmp/demo_streaming_data")
 
 # COMMAND ----------
 
@@ -252,10 +261,12 @@
 # MAGIC import org.apache.spark.sql.streaming.Trigger;
 # MAGIC import org.apache.spark.sql.streaming.StreamingQuery;
 # MAGIC 
+# MAGIC // Set the schema for a type 1 stream
 # MAGIC val schema_type_1 : StructType = StructType(
 # MAGIC                                     List(StructField("time", IntegerType),
 # MAGIC                                          StructField("action", StringType)));
 # MAGIC 
+# MAGIC // Write out the dataframe to a table
 # MAGIC val df_type_1 : StreamingQuery = delta_stream.where($"schema_type" === 0)
 # MAGIC                                         .select(from_json($"json", 
 # MAGIC                                                           schema_type_1 ).alias("json"))
@@ -287,19 +298,21 @@
 # MAGIC import org.apache.spark.sql.streaming.Trigger;
 # MAGIC import org.apache.spark.sql.streaming.StreamingQuery;
 # MAGIC 
+# MAGIC // Set the schema for a type 2 stream
 # MAGIC val schema_type_2 : StructType = StructType(
 # MAGIC                                     List(StructField("time", IntegerType),
 # MAGIC                                          StructField("action", StringType)));
 # MAGIC 
+# MAGIC // Write out the dataframe to a table
 # MAGIC val df_type_2 : StreamingQuery = delta_stream.where($"schema_type" === 0)
-# MAGIC                                         .select(from_json($"json", 
-# MAGIC                                                           schema_type_2 ).alias("json"))
-# MAGIC                                         .select($"json.*")
-# MAGIC                                         .writeStream
-# MAGIC                                         .format("delta")
-# MAGIC                                         .trigger(Trigger.Once)
-# MAGIC                                         .option("checkpointLocation", "dbfs:/tmp/demo_streaming_data_2_checkpoint")
-# MAGIC                                         .start("dbfs:/tmp/demo_streaming_data_2")
+# MAGIC                                              .select(from_json($"json", 
+# MAGIC                                                                schema_type_2 ).alias("json"))
+# MAGIC                                              .select($"json.*")
+# MAGIC                                              .writeStream
+# MAGIC                                              .format("delta")
+# MAGIC                                              .trigger(Trigger.Once)
+# MAGIC                                              .option("checkpointLocation", "dbfs:/tmp/demo_streaming_data_2_checkpoint")
+# MAGIC                                              .start("dbfs:/tmp/demo_streaming_data_2")
 
 # COMMAND ----------
 
@@ -322,10 +335,12 @@
 # MAGIC import org.apache.spark.sql.streaming.Trigger;
 # MAGIC import org.apache.spark.sql.streaming.StreamingQuery;
 # MAGIC 
+# MAGIC // Set the schema for a type 3 stream
 # MAGIC val schema_type_3 : StructType = StructType(
 # MAGIC                                     List(StructField("time", IntegerType),
 # MAGIC                                          StructField("action", StringType)));
 # MAGIC 
+# MAGIC // Write out the dataframe to a table
 # MAGIC val df_type_3 : StreamingQuery = delta_stream.where($"schema_type" === 0)
 # MAGIC                                         .select(from_json($"json", 
 # MAGIC                                                           schema_type_3 ).alias("json"))
@@ -352,6 +367,7 @@
 # MAGIC Clean up all files written
 # MAGIC """
 # MAGIC 
+# MAGIC # list of all files written during this demo
 # MAGIC _paths : List[str] = ["dbfs:/tmp/demo_streaming_data_1", 
 # MAGIC                       "dbfs:/tmp/demo_streaming_data_2",
 # MAGIC                       "dbfs:/tmp/demo_streaming_data_3",
@@ -362,6 +378,7 @@
 # MAGIC                       "dbfs:/tmp/gzipped_clickstream_checkpoint",
 # MAGIC                       "dbfs:/tmp/gzipped_clickstream",
 # MAGIC                       "dbfs:/tmp/demo_data_checkpoint"]
-# MAGIC   
+# MAGIC 
+# MAGIC # remove all files written during this demo
 # MAGIC for a in _paths:
 # MAGIC     dbutils.fs.rm(a, recurse = True)
