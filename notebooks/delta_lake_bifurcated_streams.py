@@ -144,6 +144,7 @@
 # MAGIC df.writeStream
 # MAGIC   .format("delta")
 # MAGIC   .trigger(Trigger.Once)
+# MAGIC   .option("mode", "overwrite")
 # MAGIC   .option("checkpointLocation", "dbfs:/tmp/demo_data_checkpoint/")
 # MAGIC   .start("dbfs:/tmp/demo_streaming_data");
 
@@ -220,6 +221,7 @@
 
 # COMMAND ----------
 
+# DBTITLE 1,Load the Demo Streaming Data
 # MAGIC %scala
 # MAGIC 
 # MAGIC import org.apache.spark.sql.DataFrame;
@@ -233,6 +235,13 @@
 # MAGIC                                     .format("delta")
 # MAGIC                                     .option("startingVerson", "latest")
 # MAGIC                                     .load("dbfs:/tmp/demo_streaming_data")
+
+# COMMAND ----------
+
+# DBTITLE 1,List all Delta files
+# MAGIC %fs
+# MAGIC 
+# MAGIC ls dbfs:/tmp/demo_streaming_data
 
 # COMMAND ----------
 
@@ -368,17 +377,21 @@
 # MAGIC """
 # MAGIC 
 # MAGIC # list of all files written during this demo
-# MAGIC _paths : List[str] = ["dbfs:/tmp/demo_streaming_data_1", 
-# MAGIC                       "dbfs:/tmp/demo_streaming_data_2",
-# MAGIC                       "dbfs:/tmp/demo_streaming_data_3",
-# MAGIC                       "dbfs:/tmp/demo_streaming_data",
-# MAGIC                       "dbfs:/tmp/demo_streaming_data_1_checkpoint",
-# MAGIC                       "dbfs:/tmp/demo_streaming_data_2_checkpoint",
-# MAGIC                       "dbfs:/tmp/demo_streaming_data_3_checkpoint",
-# MAGIC                       "dbfs:/tmp/gzipped_clickstream_checkpoint",
-# MAGIC                       "dbfs:/tmp/gzipped_clickstream",
-# MAGIC                       "dbfs:/tmp/demo_data_checkpoint"]
+# MAGIC _paths : List[str] = ["dbfs:/tmp/demo_streaming_data_1/", 
+# MAGIC                       "dbfs:/tmp/demo_streaming_data_2/",
+# MAGIC                       "dbfs:/tmp/demo_streaming_data_3/",
+# MAGIC                       "dbfs:/tmp/demo_streaming_data/",
+# MAGIC                       "dbfs:/tmp/demo_streaming_data_1_checkpoint/",
+# MAGIC                       "dbfs:/tmp/demo_streaming_data_2_checkpoint/",
+# MAGIC                       "dbfs:/tmp/demo_streaming_data_3_checkpoint/",
+# MAGIC                       "dbfs:/tmp/gzipped_clickstream_checkpoint/",
+# MAGIC                       "dbfs:/tmp/gzipped_clickstream/",
+# MAGIC                       "dbfs:/tmp/demo_data_checkpoint/"]
 # MAGIC 
 # MAGIC # remove all files written during this demo
 # MAGIC for a in _paths:
-# MAGIC     dbutils.fs.rm(a, recurse = True)
+# MAGIC     _res = dbutils.fs.rm(a, recurse = True)
+# MAGIC     if _res == False:
+# MAGIC         print(f"Failed to remove {a}")
+# MAGIC     else:
+# MAGIC         print(f"Removed {a}")
